@@ -10,18 +10,35 @@
     html, body {
       margin: 0;
       padding: 0;
-      width: 100vw;
-      height: 100vh;
       overflow: hidden;
+      width: 100%;
+      height: 100%;
       background: black;
+    }
+
+    #startButton {
+      position: fixed;
+      z-index: 9999;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 18px 28px;
+      font-size: 20px;
+      border: none;
+      border-radius: 14px;
+      background: #ff4fb3;
+      color: white;
     }
   </style>
 </head>
 
 <body>
 
+<button id="startButton">Запустить AR</button>
+
 <a-scene
-  mindar-image="imageTargetSrc: ./targets.mind;"
+  id="scene"
+  mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
   color-space="sRGB"
   renderer="colorManagement: true; alpha: true"
   vr-mode-ui="enabled: false"
@@ -35,6 +52,7 @@
       loop
       playsinline
       webkit-playsinline
+      crossorigin="anonymous"
       preload="auto">
     </video>
   </a-assets>
@@ -42,25 +60,46 @@
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
   <a-entity id="target" mindar-image-target="targetIndex: 0">
-    <a-video
-      id="arVideo"
-      src="#unicorn"
+
+    <a-plane
+      id="videoPlane"
       position="0 0 0.1"
       width="1"
-      height="1">
-    </a-video>
+      height="1"
+      material="src: #unicorn; transparent: true; shader: flat; side: double;">
+    </a-plane>
+
   </a-entity>
 
 </a-scene>
 
 <script>
+  const startButton = document.querySelector("#startButton");
+  const sceneEl = document.querySelector("#scene");
   const target = document.querySelector("#target");
   const video = document.querySelector("#unicorn");
 
-  target.addEventListener("targetFound", async () => {
-    video.currentTime = 0;
+  startButton.addEventListener("click", async () => {
+    startButton.style.display = "none";
+
     try {
       await video.play();
+      video.pause();
+      video.currentTime = 0;
+    } catch (e) {
+      console.log("Первичный запуск видео не удался:", e);
+    }
+
+    const arSystem = sceneEl.systems["mindar-image-system"];
+    arSystem.start();
+  });
+
+  target.addEventListener("targetFound", async () => {
+    video.currentTime = 0;
+
+    try {
+      await video.play();
+      console.log("Видео запущено");
     } catch (e) {
       console.log("Видео не запустилось:", e);
     }
