@@ -15,25 +15,6 @@
       overflow: hidden;
       background: black;
     }
-
-    a-scene,
-    canvas,
-    .a-canvas,
-    .mindar-ui-overlay,
-    .mindar-ui-scanning {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      max-width: 100vw !important;
-      max-height: 100vh !important;
-      overflow: hidden !important;
-    }
-
-    video {
-      object-fit: cover !important;
-    }
   </style>
 </head>
 
@@ -50,18 +31,19 @@
     <video
       id="unicorn"
       src="./unicorn.webm"
-      autoplay
       muted
       loop
       playsinline
-      webkit-playsinline>
+      webkit-playsinline
+      preload="auto">
     </video>
   </a-assets>
 
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-  <a-entity mindar-image-target="targetIndex: 0">
+  <a-entity id="target" mindar-image-target="targetIndex: 0">
     <a-video
+      id="arVideo"
       src="#unicorn"
       position="0 0 0.1"
       width="1"
@@ -72,33 +54,21 @@
 </a-scene>
 
 <script>
-  function fixCameraSize() {
-    const videos = document.querySelectorAll("video");
+  const target = document.querySelector("#target");
+  const video = document.querySelector("#unicorn");
 
-    videos.forEach((video) => {
-      if (video.id !== "unicorn") {
-        video.style.position = "fixed";
-        video.style.top = "0";
-        video.style.left = "0";
-        video.style.width = "100vw";
-        video.style.height = "100vh";
-        video.style.objectFit = "cover";
-        video.style.zIndex = "0";
-      }
-    });
+  target.addEventListener("targetFound", async () => {
+    video.currentTime = 0;
+    try {
+      await video.play();
+    } catch (e) {
+      console.log("Видео не запустилось:", e);
+    }
+  });
 
-    const canvases = document.querySelectorAll("canvas");
-    canvases.forEach((canvas) => {
-      canvas.style.position = "fixed";
-      canvas.style.top = "0";
-      canvas.style.left = "0";
-      canvas.style.width = "100vw";
-      canvas.style.height = "100vh";
-      canvas.style.zIndex = "1";
-    });
-  }
-
-  setInterval(fixCameraSize, 300);
+  target.addEventListener("targetLost", () => {
+    video.pause();
+  });
 </script>
 
 </body>
